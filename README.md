@@ -1,2 +1,2 @@
-# goit-devops-microservice
-Tier 4. Module 6. Homeworks - DevOps CI/CD
+# My own microservice project
+This is a repository for a learning project within the "DevOps CI/CD" course.
