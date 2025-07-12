@@ -1,128 +1,174 @@
 # Tier 4. Module 6 - DevOps CI/CD
 
-## Homework for Topic 4 - Docker
+## Homework for Topic 5 - IaS. Terraform
 
 ### Technical task
 
-This task will not only consolidate Docker's knowledge, but also prepare for the construction of complex infrastructures in future topics.
+We suggest you practice
+
+- Setting up a backend for Terraform with guaranteed secure and centralized state storage.
+- Deploying key AWS infrastructure components using Terraform.
+- Documenting your actions for reuse and team convenience.
+
+This task is as close as possible to real-world scenarios that you will encounter at work. By completing it, you will not only consolidate the theory, but also deepen your infrastructure project.
 
 #### Task description
 
-1. Create your own project that includes:
+The task is to create a Terraform structure for the infrastructure on AWS in a **new directory** `lesson-5`.
 
-- **Django** - for a web application.
-- **PostgreSQL** - for data storage.
-- **Nginx** - for processing requests.
+It's required to configure:
 
-2. Use the Docker and Docker Compose to Containerization of All Services.
+1. **Synchronization of state files** to S3 using DynamoDB for locking.
+2. **Network infrastructure (VPC)** with public and private subnets.
+3. **ECR (Elastic Container Registry)** for storing Docker images.
 
-3. Upload the project into your repository on GitHub.
+**Project Structure**
 
-#### Steps to complete the task
+```
+lesson-5/
+│
+├── main.tf                  # Main file for connecting modules
+├── backend.tf               # Setting up the backend for states (S3 + DynamoDB)
+├── outputs.tf               # General resource extraction
+│
+├── modules/                 # Catalog with all modules
+│   │
+│   ├── s3-backend/          # Module for S3 and DynamoDB
+│   │   ├── s3.tf            # Creating an S3 bucket
+│   │   ├── dynamodb.tf      # Creating DynamoDB
+│   │   ├── variables.tf     # Variables for S3
+│   │   └── outputs.tf       # S3 and DynamoDB data output
+│   │
+│   ├── vpc/                 # Module for VPC
+│   │   ├── vpc.tf           # Creating VPC, subnets, Internet Gateway
+│   │   ├── routes.tf        # Routing settings
+│   │   ├── variables.tf     # Variables for VPC
+│   │   └── outputs.tf       # VPC data output
+│   │
+│   └── ecr/                 # Module for ECR
+│       ├── ecr.tf           # Creating an ECR repository
+│       ├── variables.tf     # Variables for ECR
+│       └── outputs.tf       # ECR repository URL output
+│
+└── README.md                # Project documentation
+```
 
-1. **Create a Django project structure in Docker**
+#### Task Steps
 
-- Initialize the new Django project (the name of the project of your choice -> django-admin startproject my_project_name).
-- Set up PostgreSQL as a database.
-- Add Nginx to traffic proxy.
+**1. Create the main project structure**
 
-2. **Create Dockerfile for Django**
+In the root folder `lesson-5`, create the files:
 
-Your dockerfile should:
+- `main.tf` — connecting modules.
+- `backend.tf` — backend settings for saving states in S3.
+- `outputs.tf` — common output data from all modules.
 
-- Use the image of Python 3.9 or newer.
-- Set all the necessary dependencies on **requirements.txt**.
-- Run a Django server in a container.
+**2. Configure S3 for states and DynamoDB**
 
-3. **Create Docker-Compos.yml**
+In the `s3-backend` module:
 
-In **docker-compose.yml**, describe all three services:
+- Configure an S3 bucket for Terraform state files.
+- Enable **versioning** to save state history.
+- Configure a **DynamoDB** table for locking states.
+- The output should be in `outputs.tf` with the URL of the S3 bucket and the name of the DynamoDB.
 
-- **web** is a Django application.
-- **db** - PostgreSQL to save data.
-- **nginx** is a web server for processing requests.
+**3. Build the network infrastructure (VPC)**
 
-4. **Set up Nginx**
+In the `vpc` module:
 
-Create a **nginx.conf** file in a **nginx** folder with the following content:
+- Create a **VPC** with a CIDR block.
+- Add **3 public subnets** and **3 private subnets**.
+- Create an **Internet Gateway** for public subnets.
+- Create a **NAT Gateway** for private subnets.
+- Configure **routing** via Route Tables.
 
-```JS
-server {
-    listen 80;
+**4. Create an ECR repository**
 
-    location / {
-        proxy_pass <http://django:8000>;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
+In the `ecr` module:
+
+- Create an ECR repository with automatic **image scanning**.
+- Configure the access policy for the repository.
+- **Output** the repository URL via `outputs.tf`.
+
+**5. Connect all modules in `main.tf`**
+
+```T
+# Connecting the S3 and DynamoDB module
+module "s3_backend" {
+  source      = "./modules/s3-backend"
+  bucket_name = "your custom name"
+  table_name  = "terraform-locks"
+}
+
+# Connecting the VPC module
+module "vpc" {
+  source             = "./modules/vpc"
+  vpc_cidr_block     = "10.0.0.0/16"
+  public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  private_subnets    = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
+  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  vpc_name           = "lesson-5-vpc"
+}
+
+# Connecting the ECR module
+module "ecr" {
+  source      = "./modules/ecr"
+  ecr_name    = "lesson-5-ecr"
+  scan_on_push = true
 }
 ```
 
-5. **Test the project locally**
+**6. Configure the backend for Terraform**
 
-Start the project with the command:
+Create `backend.tf` to configure S3 as the backend:
 
-- for the new image
-
-```bash
-docker-compose up --build
+```T
+terraform {
+  backend "s3" {
+    bucket         = "your custom name"
+    key            = "lesson-5/terraform.tfstate"
+    region         = "us-west-2"
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
+  }
+}
 ```
 
-- for the existing image
+**7. Document the project in `README.md`**
+
+In the `README.md` file, add:
+
+- A description of the project structure.
+- Commands for initialization and launch:
 
 ```bash
-docker-compose up -d
+terraform init
+terraform plan
+terraform apply
+terraform destroy
 ```
 
-- to stop the project
+- Explanation of each module: `s3-backend`, `vpc`, `ecr`.
+
+**8. Upload the project to the repository**
+
+1. Create a new **branch** `lesson-5`.
 
 ```bash
-docker-compose down
+git checkout -b lesson-5
 ```
 
-Apply migrations
+2. Commit the changes to the branch.
 
 ```bash
-docker-compose exec django python manage.py migrate
-```
-
-Create superuser
-```bash
-docker-compose exec django python manage.py createsuperuser
-```
-
-Make sure:
-
-- Web project is available at http://localhost.
-
-![Django](./readme-img/django.png)
-
-- connection to the PostgreSQL database works.
-
-![Admin](./readme-img/admin.png)
-
-![DBeaver](./readme-img/dbeaver.png)
-
-
-6. **Upload the project on GitHub**
-
-- Create a new `lesson-4` branch in your repository.
-- Download all the files of your project to the repository.
-- Use the following commands to download changes:
-
-```bash
-git checkout -b lesson-4
 git add .
-git commit -m "Add Dockerized Django project with PostgreSQL and Nginx"
-git push origin lesson-4
+git commit -m "Add Terraform modules for S3, VPC, and ECR"
+git push origin lesson-5
 ```
 
-#### Acceptance criteria
+#### Homework Acceptance Criteria
 
-1. Created the Django+Postgresql+nginx project in Docker.
-2. All services are described in `docker-kompos.yml`.
-3. Dockerfile for Django is configured according to the requirements above.
-4. Nginx works as a web server to proximate requests.
-5. The project is successfully launched locally by the `docker-comose up` command.
-6. The project code is downloaded to the GitHub repository in the `lesson-4` branch.
+1. The `lesson-5` directory structure matches the specified one.
+2. All modules are created and working.
+3. Terraform creates resources in AWS.
+4. The project is pushed to the repository in the `lesson-5` branch.
