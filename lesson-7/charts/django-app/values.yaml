@@ -1,0 +1,34 @@
+image:
+  repository: 375004071644.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+resources:
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+  requests:
+    cpu: "1"
+    memory: "1Gi"
+
+service:
+  type: LoadBalancer
+  port: 80
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+strategy:
+  updateType: RollingUpdate
+  maxSurge: 50%
+  maxUnavailable: 50%
+
+secretKey: "placeholder-for-django-secret-key" # Placeholder for local dev
+config:
+  DEBUG: "1"
+  ALLOWED_HOSTS: "localhost"

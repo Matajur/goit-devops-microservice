@@ -1,31 +1,45 @@
 # Tier 4. Module 6 - DevOps CI/CD
 
-## Homework for Topic 5 - IaS. Terraform
+## Homework for Topic 7 - Learning Helm
 
 ### Technical task
 
-We suggest you practice
-
-- Setting up a backend for Terraform with guaranteed secure and centralized state storage.
-- Deploying key AWS infrastructure components using Terraform.
-- Documenting your actions for reuse and team convenience.
-
-This task is as close as possible to real-world scenarios that you will encounter at work. By completing it, you will not only consolidate the theory, but also deepen your infrastructure project.
+This time the task is related to the practical use of Terraform, Docker, and Kubernetes.
 
 #### Task description
 
-The task is to create a Terraform structure for the infrastructure on AWS in a **new directory** `lesson-5`.
+The task is to create a Kubernetes cluster in the same network (VPC) that you configured in the previous homework assignment and implement the following components:
 
-It's required to configure:
+1. **Create a Kubernetes cluster** using Terraform.
+2. **Set up an Elastic Container Registry (ECR)** to store your Django application's Docker image.
+3. **Upload the Django Docker image** to the ECR.
+4. **Create a helm chart** (`deployment.yaml`, `service.yaml`, `hpa.yaml`, `configmap.yaml`)
+5. **Migrate the environment variables (env)** from topic 4 into a ConfigMap that your application will use.
 
-1. **Synchronization of state files** to S3 using DynamoDB for locking.
-2. **Network infrastructure (VPC)** with public and private subnets.
-3. **ECR (Elastic Container Registry)** for storing Docker images.
+#### Task Steps
+
+**1. Create a Kubernetes cluster**
+
+- Using Terraform, create a Kubernetes cluster in an existing network (VPC).
+- Provide access to the cluster using `kubectl`.
+
+**2. Configure ECR**
+
+- Using Terraform, create a repository in Amazon Elastic Container Registry (ECR).
+- Upload the Django Docker image you created in topic 4 to ECR using the AWS CLI.
+
+**3. Create a helm. The Helm chart should implement:**
+
+- **Deployment** — with the Django image with ECR and a `ConfigMap` connection (via `envFrom`).
+- **Service** — of type `LoadBalancer` for external access.
+- **HPA (Horizontal Pod Autoscaler)** — scaling pods from 2 to 6 when load is > 70%.
+- **ConfigMap** — for environment variables (carried over from topic 4).
+- **values.yaml** — with image, service, configuration, and autoscaler parameters.
 
 **Project Structure**
 
 ```
-lesson-5/
+lesson-7/
 │
 ├── main.tf                  # Main file for connecting modules
 ├── backend.tf               # Setting up the backend for states (S3 + DynamoDB)
@@ -45,130 +59,42 @@ lesson-5/
 │   │   ├── variables.tf     # Variables for VPC
 │   │   └── outputs.tf       # VPC data output
 │   │
-│   └── ecr/                 # Module for ECR
-│       ├── ecr.tf           # Creating an ECR repository
-│       ├── variables.tf     # Variables for ECR
-│       └── outputs.tf       # ECR repository URL output
+│   ├── ecr/                 # Module for ECR
+│   │   ├── ecr.tf           # Creating an ECR repository
+│   │   ├── variables.tf     # Variables for ECR
+│   │   └── outputs.tf       # ECR repository URL output
+│   │
+│   └── eks/                 # Module for Kubernetes cluster
+│       ├── eks.tf           # Creating a cluster
+│       ├── variables.tf     # Variables for EKS
+│       └── outputs.tf       # Displaying cluster information
 │
+├── charts/
+│   └── django-app/
+│       ├── templates/
+│       │   ├── deployment.yaml
+│       │   ├── service.yaml
+│       │   ├── configmap.yaml
+│       │   └── hpa.yaml
+│       ├── Chart.yaml
+│       └── values.yaml      # ConfigMap with environment variables
+|
 └── README.md                # Project documentation
 ```
 
-#### Task Steps
+#### Execution Results
 
-**1. Create the main project structure**
+- A Kubernetes cluster has been created in your AWS account.
+- The ECR contains the uploaded Docker image of the Django application.
+- The application is deployed to the cluster using a Helm chart.
+- The Service provides access to the application via a public IP address.
+- The ConfigMap is connected to the application via Helm.
+- HPA dynamically scales the number of pods.
 
-In the root folder `lesson-5`, create the files:
+#### Acceptance Criteria
 
-- `main.tf` — connecting modules.
-- `backend.tf` — backend settings for saving states in S3.
-- `outputs.tf` — common output data from all modules.
-
-**2. Configure S3 for states and DynamoDB**
-
-In the `s3-backend` module:
-
-- Configure an S3 bucket for Terraform state files.
-- Enable **versioning** to save state history.
-- Configure a **DynamoDB** table for locking states.
-- The output should be in `outputs.tf` with the URL of the S3 bucket and the name of the DynamoDB.
-
-**3. Build the network infrastructure (VPC)**
-
-In the `vpc` module:
-
-- Create a **VPC** with a CIDR block.
-- Add **3 public subnets** and **3 private subnets**.
-- Create an **Internet Gateway** for public subnets.
-- Create a **NAT Gateway** for private subnets.
-- Configure **routing** via Route Tables.
-
-**4. Create an ECR repository**
-
-In the `ecr` module:
-
-- Create an ECR repository with automatic **image scanning**.
-- Configure the access policy for the repository.
-- **Output** the repository URL via `outputs.tf`.
-
-**5. Connect all modules in `main.tf`**
-
-```T
-# Connecting the S3 and DynamoDB module
-module "s3_backend" {
-  source      = "./modules/s3-backend"
-  bucket_name = "your custom name"
-  table_name  = "terraform-locks"
-}
-
-# Connecting the VPC module
-module "vpc" {
-  source             = "./modules/vpc"
-  vpc_cidr_block     = "10.0.0.0/16"
-  public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  private_subnets    = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  vpc_name           = "lesson-5-vpc"
-}
-
-# Connecting the ECR module
-module "ecr" {
-  source      = "./modules/ecr"
-  ecr_name    = "lesson-5-ecr"
-  scan_on_push = true
-}
-```
-
-**6. Configure the backend for Terraform**
-
-Create `backend.tf` to configure S3 as the backend:
-
-```T
-terraform {
-  backend "s3" {
-    bucket         = "your custom name"
-    key            = "lesson-5/terraform.tfstate"
-    region         = "us-west-2"
-    dynamodb_table = "terraform-locks"
-    encrypt        = true
-  }
-}
-```
-
-**7. Document the project in `README.md`**
-
-In the `README.md` file, add:
-
-- A description of the project structure.
-- Commands for initialization and launch:
-
-```bash
-terraform init
-terraform plan
-terraform apply
-terraform destroy
-```
-
-- Explanation of each module: `s3-backend`, `vpc`, `ecr`.
-
-**8. Upload the project to the repository**
-
-1. Create a new **branch** `lesson-5`.
-
-```bash
-git checkout -b lesson-5
-```
-
-2. Commit the changes to the branch.
-
-```bash
-git add .
-git commit -m "Add Terraform modules for S3, VPC, and ECR"
-git push origin lesson-5
-```
-
-#### Homework Acceptance Criteria
-
-1. The `lesson-5` directory structure matches the specified one.
-2. All modules are created and working.
-3. Terraform creates resources in AWS.
-4. The project is pushed to the repository in the `lesson-5` branch.
+1. Kubernetes cluster created via Terraform and running.
+2. ECR created and contains Docker image uploaded.
+3. Deployment, Service and HPA created and running in cluster using helm.
+4. ConfigMap created and used by application.
+5. Project pushed to GitHub repository in `lesson-7` branch with documentation in `README.md`.

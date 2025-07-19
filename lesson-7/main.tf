@@ -34,3 +34,15 @@ module "ecr" {
   ecr_name    = "lesson-5-ecr"                    # ECR name
   scan_on_push = true                             # Enable image scan on push
 }
+
+# Connecting the Kubernetes module
+module "eks" {
+  source       = "./modules/eks"                  # Path to EKS module
+  cluster_name = "lesson-7-eks-cluster"           # Cluster name
+  subnet_ids      = module.vpc.public_subnets     # Subnet IDs
+  vpc_id          = module.vpc.vpc_id             # VPC ID where EKS cluster will be deployed
+  instance_type   = "t3.medium"                   # Instance type
+  desired_size    = 2                             # Desired number of nodes
+  max_size        = 2                             # Maximum number of nodes
+  min_size        = 6                             # Minimum number of nodes
+}
