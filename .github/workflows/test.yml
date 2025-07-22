@@ -1,0 +1,30 @@
+name: Deploy to Amazon ECS
+
+on:
+  pull_request:
+    branches: [ "lesson-4" ]
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REPOSITORY: MY_ECR_REPOSITORY           # set this to your Amazon ECR repository name
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        ls -l
+        
