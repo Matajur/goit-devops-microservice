@@ -39,3 +39,17 @@ jobs:
       run: |
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Set up Git
+      run: |
+        git config user.name "${{ secrets.COMMIT_NAME }}"
+        git config user.email "${{ secrets.COMMIT_EMAIL }}"
+
+    - name: Clone helm repo
+      run: |
+        git clone https://${{ secrets.GITHUB_USERNAME }}:${{ secrets.GITHUB_TOKEN }}@github.com/Matajur/goit-devops-microservice.git
+        cd Project/charts/django-app
+        sed -i "s/tag: .*/tag: ${{ env.IMAGE_TAG }}/" values.yaml
+        git add values.yaml
+        git commit -m "Update image tag to ${{ env.IMAGE_TAG }}"
+        git push origin lesson-4
