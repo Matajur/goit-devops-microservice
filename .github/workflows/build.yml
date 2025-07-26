@@ -6,7 +6,7 @@ on:
 
 env:
   AWS_REGION: eu-central-1
-  ECR_REPOSITORY: MY_ECR_REPOSITORY           # set this to your Amazon ECR repository name
+  ECR_REPOSITORY: 375004071644.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr
 
 permissions:
   contents: read
