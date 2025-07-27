@@ -1,0 +1,28 @@
+applications:
+  - name: django-app
+    namespace: default
+    project: default
+    source:
+      repoURL: <https://github.com/Matajur/example-repo.git>
+      path: django-chart
+      targetRevision: lesson-4
+      helm:
+        valueFiles:
+          - values.yaml
+    destination:
+      server: <https://kubernetes.default.svc>
+      namespace: default
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+
+repositories:
+  - name: django-app
+    url: <https://github.com/Matajur/example-repo.git>
+    username: YOUR_USERNAME
+    password: YOUR_PASS
+
+repoConfig:
+  insecure: "true"
+  enableLfs: "true"

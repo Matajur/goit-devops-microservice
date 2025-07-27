@@ -1,0 +1,35 @@
+server:
+  service:
+    type: LoadBalancer
+    port: 443
+
+applications:
+  - name: django-app
+    namespace: dev
+    project: default
+    source:
+      repoURL: https://github.com/Matajur/goit-devops-microservice.git
+      targetRevision: lesson-4
+      path: helm-chart
+      helm:
+        valueFiles:
+          - values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: dev
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+
+repositories:
+  - name: django-app
+    url: https://github.com/Matajur/goit-devops-microservice.git
+    type: git
+    username: YOUR_USERNAME
+    password: YOUR_PASS
+
+
+repoConfig:
+  insecure: "true"
+  

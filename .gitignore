@@ -1,0 +1,4 @@
+.env
+secrets.auto.tfvars
+*.tfvars
+!secrets.example.auto.tfvars

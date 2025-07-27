@@ -1,0 +1,46 @@
+image:
+  repository: ""            # Injected from Terraform
+  tag: ""                   # Injected from Terraform
+  pullPolicy: Always
+
+secretKey: ""               # Injected from Terraform
+debug: true                 # Injected from Terraform
+allowedHosts: "localhost"   # Injected from Terraform
+
+replicaCount: 1
+
+resources:
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+  requests:
+    cpu: "1"
+    memory: "1Gi"
+
+service:
+  type: LoadBalancer
+  port: 80
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+strategy:
+  updateType: RollingUpdate
+  maxSurge: 50%
+  maxUnavailable: 50%
+
+env:
+  - name: POSTGRES_DB
+    value: ""  # Injected from Terraform
+  - name: POSTGRES_USER
+    value: ""  # Injected from Terraform
+  - name: POSTGRES_PASSWORD
+    value: ""  # Injected from Terraform
+  - name: DB_HOST
+    value: ""  # Injected from Terraform (RDS endpoint)
+  - name: DB_PORT
+    value: ""  # Injected from Terraform (usually "5432")
+    
