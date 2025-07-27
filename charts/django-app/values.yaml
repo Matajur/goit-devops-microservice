@@ -1,7 +1,11 @@
 image:
-  repository: ""
-  tag: ""
+  repository: ""            # Injected from Terraform
+  tag: ""                   # Injected from Terraform
   pullPolicy: IfNotPresent
+
+secretKey: ""               # Injected from Terraform
+debug: true                 # Injected from Terraform
+allowedHosts: "localhost"   # Injected from Terraform
 
 replicaCount: 1
 

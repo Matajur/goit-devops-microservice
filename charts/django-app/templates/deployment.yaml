@@ -39,7 +39,8 @@ spec:
               memory: {{ .Values.resources.requests.memory}}
           env:
             - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: SECRET_KEY
+              value: {{ .Values.secretKey | quote }}
+            - name: DEBUG
+              value: {{ .Values.debug | quote }}
+            - name: ALLOWED_HOSTS
+              value: {{ .Values.allowedHosts | quote }}
