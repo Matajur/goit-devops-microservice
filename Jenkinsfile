@@ -50,5 +50,20 @@ spec:
         }
       }
     }
+
+    stage('Deploy to Kubernetes via Helm') {
+      steps {
+        container('kaniko') {
+          sh '''
+            helm upgrade --install django-app charts/django-app \
+              --namespace django \
+              --create-namespace \
+              --set image.repository=$ECR_REGISTRY/$IMAGE_NAME \
+              --set image.tag=$IMAGE_TAG \
+              --set image.pullPolicy=Always
+          '''
+        }
+      }
+    } 
   }
 }
