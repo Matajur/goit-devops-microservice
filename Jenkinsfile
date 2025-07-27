@@ -57,8 +57,15 @@ spec:
     stage('Deploy to Kubernetes via Helm') {
       steps {
         container('helm') {
-          dir("${env.WORKSPACE}") {
+          dir("${WORKSPACE}") {
             sh '''
+              echo "🔍 Current directory:"
+              pwd
+              echo "📂 Listing workspace content:"
+              ls -la
+              echo "📂 Listing chart path:"
+              ls -la charts/django-app
+    
               helm upgrade --install django-app charts/django-app \
                 --namespace django \
                 --create-namespace \
