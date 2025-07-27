@@ -12,14 +12,17 @@ spec:
   containers:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:v1.16.0-debug
-      imagePullPolicy: Always
-      command:
-        - sleep
-      args:
-        - 99d
+      command: [ "sleep" ]
+      args: [ "99d" ]
       volumeMounts:
         - name: kaniko-secret
           mountPath: /kaniko/.docker
+
+    - name: helm
+      image: alpine/helm:3.14.0
+      command: [ "sleep" ]
+      args: [ "99d" ]
+
   volumes:
     - name: kaniko-secret
       secret:
@@ -28,7 +31,7 @@ spec:
     }
   }
 
-  environment {	
+  environment {
     ECR_REGISTRY = "375004071644.dkr.ecr.eu-central-1.amazonaws.com"
     IMAGE_NAME   = "lesson-5-ecr"
     IMAGE_TAG    = "latest"
@@ -40,8 +43,8 @@ spec:
         container('kaniko') {
           sh '''
             /kaniko/executor \
-              --context=$(pwd) \
-              --dockerfile=$(pwd)/Dockerfile \
+              --context=`pwd` \
+              --dockerfile=`pwd`/Dockerfile \
               --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
               --cache=true \
               --insecure \
@@ -53,7 +56,7 @@ spec:
 
     stage('Deploy to Kubernetes via Helm') {
       steps {
-        container('kaniko') {
+        container('helm') {
           sh '''
             helm upgrade --install django-app charts/django-app \
               --namespace django \
@@ -64,6 +67,6 @@ spec:
           '''
         }
       }
-    } 
+    }
   }
 }
