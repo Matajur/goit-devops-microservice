@@ -1,7 +1,7 @@
 image:
   repository: ""            # Injected from Terraform
   tag: ""                   # Injected from Terraform
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 secretKey: ""               # Injected from Terraform
 debug: true                 # Injected from Terraform
