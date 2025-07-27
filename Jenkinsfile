@@ -57,14 +57,16 @@ spec:
     stage('Deploy to Kubernetes via Helm') {
       steps {
         container('helm') {
-          sh '''
-            helm upgrade --install django-app charts/django-app \
-              --namespace django \
-              --create-namespace \
-              --set image.repository=$ECR_REGISTRY/$IMAGE_NAME \
-              --set image.tag=$IMAGE_TAG \
-              --set image.pullPolicy=Always
-          '''
+          dir("${env.WORKSPACE}") {
+            sh '''
+              helm upgrade --install django-app charts/django-app \
+                --namespace django \
+                --create-namespace \
+                --set image.repository=375004071644.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr \
+                --set image.tag=latest \
+                --set image.pullPolicy=Always
+            '''
+          }
         }
       }
     }
