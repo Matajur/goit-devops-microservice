@@ -31,3 +31,18 @@ strategy:
   updateType: RollingUpdate
   maxSurge: 50%
   maxUnavailable: 50%
+
+env:
+  - name: POSTGRES_DB
+    value: postgres
+  - name: POSTGRES_USER
+    value: postgres
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: postgres-postgresql
+        key: postgres-password
+  - name: DB_HOST
+    value: postgres-postgresql.django.svc.cluster.local
+  - name: DB_PORT
+    value: "5432"
