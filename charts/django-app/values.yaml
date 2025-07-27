@@ -5,9 +5,9 @@ image:
 
 secretKey: ""               # Injected from Terraform
 debug: true                 # Injected from Terraform
-allowedHosts: "localhost"   # Injected from Terraform
+allowedHosts: ""            # Injected from Terraform
 
-replicaCount: 1
+replicaCount: 2
 
 resources:
   limits:
@@ -34,15 +34,12 @@ strategy:
 
 env:
   - name: POSTGRES_DB
-    value: postgres
+    value: ""  # Injected from Terraform
   - name: POSTGRES_USER
-    value: postgres
+    value: ""  # Injected from Terraform
   - name: POSTGRES_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: postgres-postgresql
-        key: postgres-password
+    value: ""  # Injected from Terraform
   - name: DB_HOST
-    value: postgres-postgresql.django.svc.cluster.local
+    value: ""  # Injected from Terraform (RDS endpoint)
   - name: DB_PORT
-    value: "5432"
+    value: ""  # Injected from Terraform (usually "5432")
