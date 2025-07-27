@@ -17,10 +17,22 @@ pipeline {
       }
     }
 
-    stage('Build Docker Image') {
+    stage('Build Docker Image with Kaniko') {
       steps {
-        script {
-          dockerImage = docker.build("${ECR_REPO}:${IMAGE_TAG}")
+        container('kaniko') {
+          withEnv([
+            "DOCKER_CONFIG=/kaniko/.docker/"
+          ]) {
+            sh '''
+              /kaniko/executor \
+                --context ${WORKSPACE}/django-app \
+                --dockerfile ${WORKSPACE}/django-app/Dockerfile \
+                --destination=375004071644.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr:1 \
+                --insecure \
+                --skip-tls-verify \
+                --cache=true
+            '''
+          }
         }
       }
     }
