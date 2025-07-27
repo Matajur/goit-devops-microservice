@@ -1,41 +1,30 @@
 # Tier 4. Module 6 - DevOps CI/CD
 
-## Homework for Topics 8-9 - Studing Jenkins CI and ArgoCD + CD
+## Homework for Topic 10 - Database administration
 
 ### Technical task
 
-This time, the task is to bring together Jenkins, Terraform, ECR, Helm, and Argo CD and build a true deployment pipeline that works without manual intervention.
+The task is to create a **production-ready Terraform module** that can create:
 
-This hands-on exercise will show you how modern DevOps teams ensure fast, stable, and predictable delivery of changes to production.
+- **A regular RDS database (PostgreSQL / MySQL)**
+- **Or an Aurora cluster**, depending on the `use_aurora = true flag`
+
+This task will teach you how to work with conditional logic in Terraform, dependencies between resources, and structured variables.
 
 #### Task description
 
-The goal is to implement a complete CI/CD process using **Jenkins + Helm + Terraform + Argo CD** that:
+Implement a universal `rds` module that:
 
-1. **Automatically builds a Docker image** for a Django application;
-2. **Publishes the image to Amazon ECR**;
-3. **Updates the Helm chart** in the repository with the correct tag;
-4. **Synchronizes the application across the cluster via Argo CD**, which picks up changes from Git.
+1. Brings up an **Aurora Cluster** or a **regular RDS instance** based on the `use_aurora` value;
+2. Automatically creates:
 
-#### Task Steps
+- **DB Subnet Group**
+- **Security Group**
+- **Parameter Group** for the selected DB type;
 
-**1. Jenkins + Helm + Terraform**
+3. Works with minimal variable changes and supports multiple uses.
 
-- Install Jenkins via Helm, automating the installation via Terraform.
-- Deploy Jenkins via Kubernetes Agent (Kaniko + Git).
-- Implement a pipeline (via Jenkinsfile) that:
-- Builds an image from a Dockerfile;
-- Pushes it to ECR;
-- Updates a tag in another repository's `values.yaml`;
-- Pushes changes to `main`.
-
-**2. Argo CD + Helm + Terraform**
-
-- Install Argo CD via Helm using Terraform.
-- Configure an Argo CD Application that tracks Helm chart updates.
-- Argo CD should automatically sync changes to the cluster after Git updates.
-
-**Project Structure**
+#### Project structure
 
 ```
 Project/
@@ -69,6 +58,13 @@ Project/
 │   │   ├── variables.tf     # Variables for EKS
 │   │   └── outputs.tf       # Displaying cluster information
 │   │
+│   ├── rds/                 # Module for RDS
+│   │   ├── rds.tf           # Creating an RDS database
+│   │   ├── aurora.tf        # Creating an aurora database cluster
+│   │   ├── shared.tf        # Shared resources
+│   │   ├── variables.tf     # Variables (resources, credentials, values)
+│   │   └── outputs.tf
+│   │
 │   ├── jenkins/             # Jenkins Helm installation module
 │   │   ├── jenkins.tf       # Jenkins Helm release
 │   │   ├── variables.tf     # Variables (resources, credentials, values)
@@ -100,3 +96,20 @@ Project/
 |
 └── README.md                # Project documentation
 ```
+
+#### Module functionality:
+
+- `use_aurora = true` → Aurora Cluster + writer is created;
+- `use_aurora = false` → one `aws_db_instance` is created;
+
+In both cases:
+- `aws_db_subnet_group` is created;
+- `aws_security_group` is created;
+- `parameter group` is created with basic parameters (`max_connections`, `log_statement`, `work_mem`);
+- The `engine`, `engine_version`, `instance_class`, `multi_az` parameters are specified through variables.
+
+#### README.md should contain:
+
+- An example of using the module (`module "rds" { ... }`);
+- A description of all variables with an explanation;
+- A description of how to change the database type, engine, instance class, etc.
