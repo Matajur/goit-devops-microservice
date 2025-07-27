@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  {{- if not .Values.hpa.enabled}}
+  replicas: {{ .Values.replicaCount}}
+  {{- end}}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  strategy:
+    type: {{ .Values.strategy.updateType}}
+    rollingUpdate:
+      maxSurge: {{ .Values.strategy.maxSurge}}
+      maxUnavailable: {{ .Values.strategy.maxUnavailable}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu}}
+              memory: {{ .Values.resources.limits.memory}}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu}}
+              memory: {{ .Values.resources.requests.memory}}
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: SECRET_KEY
