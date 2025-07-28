@@ -1,30 +1,62 @@
 # Tier 4. Module 6 - DevOps CI/CD
 
-## Homework for Topic 10 - Database administration
+## Final Project
 
 ### Technical task
 
-The task is to create a **production-ready Terraform module** that can create:
+Technical Requirements
 
-- **A regular RDS database (PostgreSQL / MySQL)**
-- **Or an Aurora cluster**, depending on the `use_aurora = true flag`
+- **Infrastructure**: AWS using Terraform
+- **Components**: VPC, EKS, RDS, ECR, Jenkins, Argo CD, Prometheus, Grafana
 
-This task will teach you how to work with conditional logic in Terraform, dependencies between resources, and structured variables.
+#### Execution steps
 
-#### Task description
+1. Prepare the environment:
 
-Implement a universal `rds` module that:
+- Initialize Terraform.
+- Verify all required variables and parameters.
 
-1. Brings up an **Aurora Cluster** or a **regular RDS instance** based on the `use_aurora` value;
-2. Automatically creates:
+2. Deploy the infrastructure:
 
-- **DB Subnet Group**
-- **Security Group**
-- **Parameter Group** for the selected DB type;
+- Run the deployment command:
 
-3. Works with minimal variable changes and supports multiple uses.
+```bash
+terraform apply
+```
 
-#### Project structure
+- Check the status of resources via:
+
+```bash
+kubectl get all -n jenkins
+kubectl get all -n argocd
+kubectl get all -n monitoring
+```
+
+3. Check availability:
+
+- Jenkins:
+
+```bash
+kubectl port-forward svc/jenkins 8080:8080 -n jenkins
+```
+
+- Argo CD:
+
+```bash
+kubectl port-forward svc/argocd-server 8081:443 -n argocd
+```
+
+4. Monitor and check metrics:
+
+- Grafana:
+
+```bash
+kubectl port-forward svc/grafana 3000:80 -n monitoring
+```
+
+- Check the status of metrics in the Grafana Dashboard.
+
+#### Project Structure
 
 ```
 Project/
@@ -72,7 +104,7 @@ Project/
 │   │   ├── values.yaml      # Jenkins configuration
 │   │   └── outputs.tf       # Outputs (URL, admin password)
 │   │ 
-│   └── argo_cd/ # Module for Helm installation of Argo CD
+│   └── argo_cd/             # Module for Helm installation of Argo CD
 │       ├── argo-cd.tf       # Helm release for Jenkins
 │       ├── variables.tf     # Variables (chart version, namespace, repo URL, etc.)
 │       ├── providers.tf     # Kubernetes+Helm. ported from jenkins module
@@ -93,23 +125,12 @@ Project/
 │       │   └── hpa.yaml
 │       ├── Chart.yaml
 │       └── values.yaml      # ConfigMap with environment variables
-|
+│
+├──django
+│			 ├── app\
+│			 ├── Dockerfile
+│			 ├── Jenkinsfile
+│			 └── docker-compose.yaml
+│
 └── README.md                # Project documentation
 ```
-
-#### Module functionality:
-
-- `use_aurora = true` → Aurora Cluster + writer is created;
-- `use_aurora = false` → one `aws_db_instance` is created;
-
-In both cases:
-- `aws_db_subnet_group` is created;
-- `aws_security_group` is created;
-- `parameter group` is created with basic parameters (`max_connections`, `log_statement`, `work_mem`);
-- The `engine`, `engine_version`, `instance_class`, `multi_az` parameters are specified through variables.
-
-#### README.md should contain:
-
-- An example of using the module (`module "rds" { ... }`);
-- A description of all variables with an explanation;
-- A description of how to change the database type, engine, instance class, etc.

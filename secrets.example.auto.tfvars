@@ -23,3 +23,6 @@ github_token        = "ghp_xxxxxxxxxxxxxx"
 # Jenking
 jenkins_admin_user  = "admin"
 jenkins_admin_pass  = "jenkins_admin_password"
+
+# Grafana
+grafana_admin_pass  = "grafana_admin_pass"

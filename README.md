@@ -8,7 +8,9 @@ This project provisions AWS infrastructure for:
 - **EKS** (Elastic Kubernetes Service)
 - **RDS** (Relational Data Base)
 - **Jenkins**
-- **Argo-CD**
+- **Argo CD**
+- **Prometheus**
+- **Grafana**
 
 ### Project Structure
 
@@ -71,15 +73,27 @@ Project/
 │               ├── application.yaml
 │               └── repository.yaml
 ├── charts/
-│   └── django-app/
+│   ├── django-app/
+│   │   ├── templates/
+│   │   │   ├── deployment.yaml
+│   │   │   ├── service.yaml
+│   │   │   ├── configmap.yaml
+│   │   │   └── hpa.yaml
+│   │   ├── Chart.yaml
+│   │   └── values.yaml      # ConfigMap with environment variables for Django web application
+│   │
+│   └── monitoring/
 │       ├── templates/
-│       │   ├── deployment.yaml
-│       │   ├── service.yaml
-│       │   ├── configmap.yaml
-│       │   └── hpa.yaml
+│       │   ├── application.yaml
+│       │   ├── servicemonitor.yaml
 │       ├── Chart.yaml
-│       └── values.yaml      # ConfigMap with environment variables
-|
+│       └── values.yaml      # ConfigMap with environment variables for Prometheus and Grafana
+├──django
+│			 ├── app\
+│			 ├── Dockerfile
+│			 ├── Jenkinsfile
+│			 └── docker-compose.yaml
+│
 └── README.md                # Project documentation
 ```
 

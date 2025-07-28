@@ -72,3 +72,8 @@ variable "github_branch" {
   description = "The branch to track in the GitHub repository"
   type        = string
 }
+
+variable "grafana_admin_pass" {
+  type        = string
+  description = "Admin password for Grafana"
+}

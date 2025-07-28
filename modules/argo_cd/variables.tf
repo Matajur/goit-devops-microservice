@@ -15,3 +15,14 @@ variable "chart_version" {
   type        = string
   default     = "5.46.4" 
 }
+
+variable "github_username" {
+  type        = string
+  description = "GitHub username for Jenkins pipeline"
+}
+
+variable "github_token" {
+  type        = string
+  description = "GitHub token (personal access token)"
+  sensitive   = true
+}

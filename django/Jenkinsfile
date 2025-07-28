@@ -1,0 +1,81 @@
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    some-label: jenkins-kaniko
+spec:
+  serviceAccountName: jenkins-sa
+  containers:
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:v1.16.0-debug
+      command: [ "sleep" ]
+      args: [ "99d" ]
+      volumeMounts:
+        - name: kaniko-secret
+          mountPath: /kaniko/.docker
+
+    - name: helm
+      image: alpine/helm:3.14.0
+      command: [ "sleep" ]
+      args: [ "99d" ]
+
+  volumes:
+    - name: kaniko-secret
+      secret:
+        secretName: kaniko-docker-config
+"""
+    }
+  }
+
+  environment {
+    ECR_REGISTRY = "375004071644.dkr.ecr.eu-central-1.amazonaws.com"
+    IMAGE_NAME   = "lesson-5-ecr"
+    IMAGE_TAG    = "latest"
+  }
+
+  stages {
+    stage('Build & Push Docker Image') {
+      steps {
+        container('kaniko') {
+          sh '''
+            /kaniko/executor \
+              --context=`pwd` \
+              --dockerfile=`pwd`/Dockerfile \
+              --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
+              --cache=true \
+              --insecure \
+              --skip-tls-verify
+          '''
+        }
+      }
+    }
+
+    stage('Deploy to Kubernetes via Helm') {
+      steps {
+        container('helm') {
+          dir("${WORKSPACE}") {
+            sh '''
+              echo "Current directory:"
+              pwd
+              echo "Listing workspace content:"
+              ls -la
+              echo "Listing chart path:"
+              ls -la charts/django-app
+    
+              helm upgrade --install django-app charts/django-app \
+                --namespace django \
+                --create-namespace \
+                --set image.repository=375004071644.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr \
+                --set image.tag=latest \
+                --set image.pullPolicy=Always
+            '''
+          }
+        }
+      }
+    }
+  }
+}

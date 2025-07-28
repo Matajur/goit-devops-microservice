@@ -1,0 +1,12 @@
+grafana:
+  adminPassword: "${var.grafana_admin_password}"
+  service:
+    type: LoadBalancer
+  ingress:
+    enabled: true
+    hosts:
+      - grafana.yourdomain.com
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false

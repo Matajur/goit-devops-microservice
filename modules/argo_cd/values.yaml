@@ -8,8 +8,8 @@ applications:
     namespace: dev
     project: default
     source:
-      repoURL: https://github.com/Matajur/goit-devops-microservice.git
-      targetRevision: lesson-4
+      repoURL: "${var.github_repo_url}"
+      targetRevision: "${var.github_branch}"
       path: helm-chart
       helm:
         valueFiles:
@@ -24,10 +24,10 @@ applications:
 
 repositories:
   - name: django-app
-    url: https://github.com/Matajur/goit-devops-microservice.git
+    url: "${var.github_repo_url}"
     type: git
-    username: YOUR_USERNAME
-    password: YOUR_PASS
+    username: "${github_username}"
+    password: "${github_token}"
 
 
 repoConfig:
